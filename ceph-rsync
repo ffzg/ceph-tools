@@ -1,0 +1,4 @@
+#!/bin/sh -x
+
+grep ceph /etc/hosts | awk '{ print $1 }' | xargs -i rsync `pwd`/ceph_capacity {}:`pwd`
+
