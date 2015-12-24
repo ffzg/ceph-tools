@@ -1,0 +1,5 @@
+#!/bin/sh -xe
+size=`rbd ls -l --format json --pretty-format | grep -A 1 \"$1\" | grep size | cut -d: -f2 | sed 's/,//'`
+test ! -z "$size" && \
+rbd export $1 - | pv -s ${size} | rbd import --image-format=2 - rbd/$1_2 || rbd ls -l
+
