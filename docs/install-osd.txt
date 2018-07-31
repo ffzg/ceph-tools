@@ -112,3 +112,11 @@ index fded11e..17f3f60 100644
 root@ceph05:/etc# /etc/init.d/ferm restart
 Restarting ferm (via systemctl): ferm.service.
 
+
+# syslog
+
+root@ceph05:/etc# scp ceph01:/etc/rsyslog.d/ffzg.conf /etc/rsyslog.d/
+ffzg.conf                                                                            100%  383     0.4KB/s   00:00    
+root@ceph05:/etc# /etc/init.d/rsyslog restart
+Restarting rsyslog (via systemctl): rsyslog.service.
+
