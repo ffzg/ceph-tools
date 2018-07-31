@@ -1,0 +1,37 @@
+Notes about OSD install:
+
+# add admin accounts
+
+root@ceph05:~# apt-get install etckeeper
+
+
+# install etckeeper
+
+root@ceph05:~# apt-get install etckeeper
+
+
+# add ssh key and distribute it in ceph cluster
+
+root@ceph05:~# ssh-keygen
+
+root@ceph01:~# ssh ceph05 cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
+
+## sync to all cluster nodes
+
+root@ceph01:~# /home/dpavlin/ceph-tools/ceph-rsync /root/.ssh/authorized_keys 
+
+
+# add node to ffzg.hr and net.ffzg.hr on deenes /etc/bind/hosts.db
+
+
+# install munin-node, add ceph plugin, and add node to munin
+
+root@ceph05:~# scp ceph01:/etc/munin/plugins/ceph_* /etc/munin/plugins/
+ceph_capacity                                                                        100% 1519     1.5KB/s   00:00    
+ceph_osd                                                                             100%  795     0.8KB/s   00:00    
+
+root@ceph05:~# apt-get install bc # required by ceph_capacity
+
+root@ceph05:~# /etc/init.d/munin-node restart
+Restarting munin-node (via systemctl): munin-node.service.
+
