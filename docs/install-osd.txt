@@ -25,6 +25,7 @@ root@ceph01:~# /home/dpavlin/ceph-tools/ceph-rsync /root/.ssh/authorized_keys
 # add node to ffzg.hr and net.ffzg.hr on deenes /etc/bind/hosts.db
 
 
+
 # sync packages
 
 root@ceph05:~# dpkg -l | grep ^ii | awk '{ print $2 }' > /tmp/dpkg.ceph05
@@ -33,6 +34,17 @@ root@ceph05:~# ssh ceph04 dpkg -l | grep ^ii | awk '{ print $2 }' > /tmp/dpkg.ce
 root@ceph05:~# apt-get install ntp smartmontools megacli
 
 root@ceph05:~# tzconfig		# configure correct timezone
+
+## verify that ntp works
+
+root@ceph05:/etc# ntpq -p
+     remote           refid      st t when poll reach   delay   offset  jitter
+==============================================================================
++ntp2.mojsite.co 193.67.79.202    2 u   34   64  177    1.120   19.263  11.388
+*melior.irb.hr   193.204.114.232  2 u   28   64  377    0.735   20.124  10.580
++ntp1.mojsite.co 217.31.202.100   2 u   26   64  377    0.871   15.624  11.315
++ntp2.cratis.cc  130.149.17.21    2 u    4   64  377    1.192   21.192  11.220
+
 
 # install munin-node, add ceph plugin, and add node to munin
 
@@ -51,4 +63,52 @@ root@ceph05:~# apt-get install bc # required by ceph_capacity
 
 root@ceph05:~# /etc/init.d/munin-node restart
 Restarting munin-node (via systemctl): munin-node.service.
+
+# check network mtu on ceph network
+
+root@ceph05:~# cat /etc/network/interfaces
+auto eth0
+iface eth0 inet dhcp
+
+auto eth1
+iface eth1 inet static
+    address 10.80.3.48
+    netmask 255.255.255.0
+    mtu 9000
+
+
+
+# configure firewall
+
+root@ceph05:~# apt-get install ferm
+
+root@ceph05:/etc# git diff
+diff --git a/ferm/ferm.conf b/ferm/ferm.conf
+index fded11e..17f3f60 100644
+--- a/ferm/ferm.conf
++++ b/ferm/ferm.conf
+@@ -14,15 +14,16 @@ table filter {
+         # allow local packet
+         interface lo ACCEPT;
+ 
++        # allow vlan83 packet
++        interface eth1 ACCEPT;
++
+         # respond to ping
+         proto icmp ACCEPT; 
+ 
+-        # allow IPsec
+-        proto udp dport 500 ACCEPT;
+-        proto (esp ah) ACCEPT;
+-
+         # allow SSH connections
+         proto tcp dport ssh ACCEPT;
++
++        saddr 193.198.212.229 proto tcp dport 4949 ACCEPT;
+     }
+     chain OUTPUT {
+         policy ACCEPT;
+
+root@ceph05:/etc# /etc/init.d/ferm restart
+Restarting ferm (via systemctl): ferm.service.
 
