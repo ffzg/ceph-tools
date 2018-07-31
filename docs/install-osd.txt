@@ -35,15 +35,29 @@ root@ceph05:~# apt-get install ntp smartmontools megacli
 
 root@ceph05:~# tzconfig		# configure correct timezone
 
+## add new node as ntp peer
+
+root@ceph01:/etc# git diff
+diff --git a/ntp.conf b/ntp.conf
+index 5e4c636..f5b2533 100644
+--- a/ntp.conf
++++ b/ntp.conf
+@@ -30,6 +30,7 @@ peer ceph01
+ peer ceph02
+ peer ceph03
+ peer ceph04
++peer ceph05
+
+ # Access control configuration; see /usr/share/doc/ntp-doc/html/accopt.html for
+ # details.  The web page <http://support.ntp.org/bin/view/Support/AccessRestrictions>
+
+root@ceph01:~# /home/dpavlin/ceph-tools/ceph-rsync /etc/ntp.conf 
+
+root@ceph01:~# /home/dpavlin/ceph-tools/ceph-ssh /etc/init.d/ntp restart
+
 ## verify that ntp works
 
 root@ceph05:/etc# ntpq -p
-     remote           refid      st t when poll reach   delay   offset  jitter
-==============================================================================
-+ntp2.mojsite.co 193.67.79.202    2 u   34   64  177    1.120   19.263  11.388
-*melior.irb.hr   193.204.114.232  2 u   28   64  377    0.735   20.124  10.580
-+ntp1.mojsite.co 217.31.202.100   2 u   26   64  377    0.871   15.624  11.315
-+ntp2.cratis.cc  130.149.17.21    2 u    4   64  377    1.192   21.192  11.220
 
 
 # install munin-node, add ceph plugin, and add node to munin
