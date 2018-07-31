@@ -10,6 +10,7 @@ root@ceph05:~# apt-get install etckeeper
 root@ceph05:~# apt-get install etckeeper
 
 
+
 # add ssh key and distribute it in ceph cluster
 
 root@ceph05:~# ssh-keygen
@@ -24,11 +25,26 @@ root@ceph01:~# /home/dpavlin/ceph-tools/ceph-rsync /root/.ssh/authorized_keys
 # add node to ffzg.hr and net.ffzg.hr on deenes /etc/bind/hosts.db
 
 
+# sync packages
+
+root@ceph05:~# dpkg -l | grep ^ii | awk '{ print $2 }' > /tmp/dpkg.ceph05
+root@ceph05:~# ssh ceph04 dpkg -l | grep ^ii | awk '{ print $2 }' > /tmp/dpkg.ceph04
+
+root@ceph05:~# apt-get install smartmontools megacli
+
+
 # install munin-node, add ceph plugin, and add node to munin
 
 root@ceph05:~# scp ceph01:/etc/munin/plugins/ceph_* /etc/munin/plugins/
 ceph_capacity                                                                        100% 1519     1.5KB/s   00:00    
 ceph_osd                                                                             100%  795     0.8KB/s   00:00    
+
+root@ceph05:~# rsync -av ceph04:/etc/munin/smart_ /etc/munin/
+
+root@ceph05:~# rsync -av 'ceph04:/etc/munin/plugins/smart_*' /etc/munin/plugins/
+
+root@ceph05:~# rsync -av ceph04:/etc/munin/plugin-conf.d/ /etc/munin/plugin-conf.d/
+
 
 root@ceph05:~# apt-get install bc # required by ceph_capacity
 
