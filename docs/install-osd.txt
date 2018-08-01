@@ -145,3 +145,98 @@ ffzg.conf                                                                       
 root@ceph05:/etc# /etc/init.d/rsyslog restart
 Restarting rsyslog (via systemctl): rsyslog.service.
 
+
+# add osd to crush map to use it's space
+
+root@r1u28:~# ceph osd tree
+ID WEIGHT   TYPE NAME       UP/DOWN REWEIGHT PRIMARY-AFFINITY
+-6  3.61578 host ceph05
+ 8  1.80789     osd.8            up  1.00000          1.00000
+ 9  1.80789     osd.9            up  1.00000          1.00000
+-1 14.47998 root default
+-2  3.62000     host ceph01
+ 0  1.81000         osd.0        up  1.00000          1.00000
+ 1  1.81000         osd.1        up  1.00000          1.00000
+-3  3.62000     host ceph02
+ 2  1.81000         osd.2        up  1.00000          1.00000
+ 3  1.81000         osd.3        up  1.00000          1.00000
+-4  3.62000     host ceph03
+ 4  1.81000         osd.4        up  1.00000          1.00000
+ 5  1.81000         osd.5        up  1.00000          1.00000
+-5  3.62000     host ceph04
+ 6  1.81000         osd.6        up  1.00000          1.00000
+ 7  1.81000         osd.7        up  1.00000          1.00000
+
+root@r1u28:~# ceph osd crush set osd.8 3.62 root=default
+set item id 8 name 'osd.8' weight 3.62 at location {root=default} to crush map
+
+root@r1u28:~# ceph osd tree
+ID WEIGHT   TYPE NAME       UP/DOWN REWEIGHT PRIMARY-AFFINITY
+-6  1.80789 host ceph05
+ 9  1.80789     osd.9            up  1.00000          1.00000
+-1 18.09998 root default
+-2  3.62000     host ceph01
+ 0  1.81000         osd.0        up  1.00000          1.00000
+ 1  1.81000         osd.1        up  1.00000          1.00000
+-3  3.62000     host ceph02
+ 2  1.81000         osd.2        up  1.00000          1.00000
+ 3  1.81000         osd.3        up  1.00000          1.00000
+-4  3.62000     host ceph03
+ 4  1.81000         osd.4        up  1.00000          1.00000
+ 5  1.81000         osd.5        up  1.00000          1.00000
+-5  3.62000     host ceph04
+ 6  1.81000         osd.6        up  1.00000          1.00000
+ 7  1.81000         osd.7        up  1.00000          1.00000
+ 8  3.62000     osd.8            up  1.00000          1.00000
+
+add second osd (root also seems to be ignored):
+
+root@ceph01:~/ceph# ceph osd crush add 9 1.81 host=ceph05
+set item id 9 name 'osd.9' weight 1.81 at location {host=ceph05}: no change
+
+root@ceph01:~/ceph# ceph osd tree
+ID WEIGHT   TYPE NAME       UP/DOWN REWEIGHT PRIMARY-AFFINITY 
+-6  3.62000 host ceph05                                       
+ 8  1.81000     osd.8            up  1.00000          1.00000 
+ 9  1.81000     osd.9            up  1.00000          1.00000 
+-1 14.47998 root default                                      
+-2  3.62000     host ceph01                                   
+ 0  1.81000         osd.0        up  1.00000          1.00000 
+ 1  1.81000         osd.1        up  1.00000          1.00000 
+-3  3.62000     host ceph02                                   
+ 2  1.81000         osd.2        up  1.00000          1.00000 
+ 3  1.81000         osd.3        up  1.00000          1.00000 
+-4  3.62000     host ceph03                                   
+ 4  1.81000         osd.4        up  1.00000          1.00000 
+ 5  1.81000         osd.5        up  1.00000          1.00000 
+-5  3.62000     host ceph04                                   
+ 6  1.81000         osd.6        up  1.00000          1.00000 
+ 7  1.81000         osd.7        up  1.00000          1.00000 
+
+
+
+# now move ceph05 under root
+
+root@ceph01:~/ceph# ceph osd crush move ceph05 root=default
+moved item id -6 name 'ceph05' to location {root=default} in crush map
+
+root@ceph01:~/ceph# ceph osd tree
+ID WEIGHT   TYPE NAME       UP/DOWN REWEIGHT PRIMARY-AFFINITY 
+-1 18.09998 root default                                      
+-2  3.62000     host ceph01                                   
+ 0  1.81000         osd.0        up  1.00000          1.00000 
+ 1  1.81000         osd.1        up  1.00000          1.00000 
+-3  3.62000     host ceph02                                   
+ 2  1.81000         osd.2        up  1.00000          1.00000 
+ 3  1.81000         osd.3        up  1.00000          1.00000 
+-4  3.62000     host ceph03                                   
+ 4  1.81000         osd.4        up  1.00000          1.00000 
+ 5  1.81000         osd.5        up  1.00000          1.00000 
+-5  3.62000     host ceph04                                   
+ 6  1.81000         osd.6        up  1.00000          1.00000 
+ 7  1.81000         osd.7        up  1.00000          1.00000 
+-6  3.62000     host ceph05                                   
+ 8  1.81000         osd.8        up  1.00000          1.00000 
+ 9  1.81000         osd.9        up  1.00000          1.00000 
+
+
