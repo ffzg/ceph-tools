@@ -31,7 +31,7 @@ root@ceph01:~# /home/dpavlin/ceph-tools/ceph-rsync /root/.ssh/authorized_keys
 root@ceph05:~# dpkg -l | grep ^ii | awk '{ print $2 }' > /tmp/dpkg.ceph05
 root@ceph05:~# ssh ceph04 dpkg -l | grep ^ii | awk '{ print $2 }' > /tmp/dpkg.ceph04
 
-root@ceph05:~# apt-get install ntp smartmontools megacli
+root@ceph05:~# apt-get install ntp smartmontools megacli fail2ban
 
 root@ceph05:~# tzconfig		# configure correct timezone
 
@@ -57,7 +57,18 @@ root@ceph01:~# /home/dpavlin/ceph-tools/ceph-ssh /etc/init.d/ntp restart
 
 ## verify that ntp works
 
-root@ceph05:/etc# ntpq -p
+root@ceph05:~# ntpq -p
+     remote           refid      st t when poll reach   delay   offset  jitter
+==============================================================================
+ 10.80.3.255     .XFAC.          16 B    -   64    0    0.000    0.000   0.000
+*zg1.ntp.CARNet. 161.53.123.8     2 u  715 1024  377    1.092    0.467   0.992
++zg2.ntp.CARNet. 161.53.123.8     2 u  477 1024  377    1.539    0.700   1.059
+ ceph01.net.ffzg .STEP.          16 s    - 1024    0    0.000    0.000   0.000
+ ceph02.net.ffzg .STEP.          16 s    - 1024    0    0.000    0.000   0.000
+ ceph03.net.ffzg .STEP.          16 s    - 1024    0    0.000    0.000   0.000
+ ceph04.net.ffzg .STEP.          16 s    - 1024    0    0.000    0.000   0.000
+ ceph05.dhcp.ffz .STEP.          16 s    - 1024    0    0.000    0.000   0.000
+
 
 
 # install munin-node, add ceph plugin, and add node to munin
