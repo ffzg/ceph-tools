@@ -1,0 +1,109 @@
+our cluster is jewel from debian stretch. Packages from upstream are have slightly diffrenet layout,
+so as a first step we upgrade to jewel upstream:
+
+root@ceph01:~# cat /etc/apt/sources.list.d/ceph.list 
+deb https://download.ceph.com/debian-jewel/ stretch main
+
+root@ceph01:~# /home/dpavlin/ceph-tools/ceph-rsync /etc/apt/sources.list.d/ceph.list 
+
+apt-get upgrade
+apt-get -f install
+
+# restart mons
+
+root@ceph01:~# systemctl restart ceph-mon@ceph01
+root@ceph01:~# ssh ceph02 systemctl restart ceph-mon@ceph02
+root@ceph01:~# ssh ceph03 systemctl restart ceph-mon@ceph03
+
+root@ceph01:~# journalctl -f &
+
+ssh ceph01 systemctl restart ceph-osd@0
+ssh ceph01 systemctl restart ceph-osd@1
+
+ssh ceph02 systemctl restart ceph-osd@2
+ssh ceph02 systemctl restart ceph-osd@3
+
+ssh ceph03 systemctl restart ceph-osd@4
+ssh ceph03 systemctl restart ceph-osd@5
+
+ssh ceph04 systemctl restart ceph-osd@6
+ssh ceph04 systemctl restart ceph-osd@7
+
+ssh ceph05 systemctl restart ceph-osd@8 # fails
+ssh ceph05 systemctl restart ceph-osd@9
+
+
+
+# remove left-overs from ceph-deploy not installed from package:
+
+root@ceph01:/usr/local# rm bin/ceph-deploy
+root@ceph01:/usr/local# rm -Rf lib/python2.7/dist-packages/ceph_deploy*
+
+
+
+# https://www.virtualtothecore.com/en/upgrade-ceph-cluster-luminous/
+
+this should be on for bluestore to work
+
+# ceph osd set sortbitwise
+
+don't rebuild osds while upgrade
+
+# ceph osd set noout
+
+root@ceph01:/etc# git diff
+diff --git a/apt/sources.list.d/ceph.list b/apt/sources.list.d/ceph.list
+index 00e171d..be26bf2 100644
+--- a/apt/sources.list.d/ceph.list
++++ b/apt/sources.list.d/ceph.list
+@@ -1 +1 @@
+-deb https://download.ceph.com/debian-jewel/ stretch main
++deb https://download.ceph.com/debian-luminous/ stretch main
+
+root@ceph01:/etc# apt update
+
+root@ceph01:~# apt-get install ceph-deploy
+
+root@ceph01:~# ceph-deploy install --release luminous ceph01
+
+[ceph_deploy][ERROR ] UnsupportedPlatform: Platform is not supported: debian  9.5
+
+pih! we won't use ceph-deploy then.
+
+root@ceph01:~# /home/dpavlin/ceph-tools/ceph-rsync /etc/apt/sources.list.d/ceph.list 
+
+upgrade whole cluster
+
+apt-get update
+apt-get upgrade
+
+root@ceph01:/home/dpavlin/ceph-tools# ceph version
+ceph version 10.2.11 (e4b061b47f07f583c92a050d9e84b1813a35671e)
+
+# upgrade monitors
+
+root@ceph01:/home/dpavlin/ceph-tools# ./restart-all-mons.sh
++ ssh ceph01 systemctl restart ceph-mon@ceph01
++ ssh ceph02 systemctl restart ceph-mon@ceph02
++ ssh ceph03 systemctl restart ceph-mon@ceph03
+
+root@ceph01:/home/dpavlin/ceph-tools# ceph version
+ceph version 12.2.7 (3ec878d1e53e1aeb47a9f619c49d9e7c0aa384d5) luminous (stable)
+
+# deploy new mgr component
+
+root@ceph01:~/ceph# ceph-deploy mgr create ceph01 ceph02 ceph03
+
+root@ceph01:~/ceph# systemctl restart ceph-osd.target # this is too agressive, and requires osd rebuild
+
+ceph osd require-osd-release luminous
+
+ceph osd unset noout
+
+# and now osd replacement for bluestore
+
+root@ceph01:~# ceph osd pool set rbd compression_algorithm snappy
+set pool 2 compression_algorithm to snappy
+root@ceph01:~# ceph osd pool set rbd compression_mode aggressive
+set pool 2 compression_mode to aggressive
+
