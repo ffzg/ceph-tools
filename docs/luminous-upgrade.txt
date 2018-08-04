@@ -107,3 +107,6 @@ set pool 2 compression_algorithm to snappy
 root@ceph01:~# ceph osd pool set rbd compression_mode aggressive
 set pool 2 compression_mode to aggressive
 
+# replace osd with bluestore
+
+http://docs.ceph.com/docs/mimic/rados/operations/bluestore-migration/
