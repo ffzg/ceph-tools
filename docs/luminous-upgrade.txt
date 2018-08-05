@@ -110,3 +110,22 @@ set pool 2 compression_mode to aggressive
 # replace osd with bluestore
 
 http://docs.ceph.com/docs/mimic/rados/operations/bluestore-migration/
+
+# disable spectre/meltdown fixes
+
+
+# tune refill
+
+ceph daemon osd.0 config get osd_max_backfills
+
+root@ceph01:/home/dpavlin# ceph daemon osd.0 config get osd_max_backfills
+{   
+    "osd_max_backfills": "2"
+}
+
+
+root@ceph01:/home/dpavlin# ceph daemon osd.0 config set osd_max_backfills 4
+{
+    "success": "osd_max_backfills = '4' rocksdb_separate_wal_dir = 'false' (not observed, change may require restart) "
+}
+
