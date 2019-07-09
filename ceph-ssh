@@ -2,4 +2,4 @@
 
 show_hostname='`hostname -s`'
 
-grep ceph /etc/hosts | awk '{ print $1 }' | xargs -i ssh {} "echo -n $show_hostname':' ; $*"
+grep ceph /etc/hosts | awk '{ print $1 }' | xargs -i ssh {} "$* | sed s/^/$show_hostname:/"
