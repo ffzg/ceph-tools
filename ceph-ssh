@@ -1,5 +1,5 @@
-#!/bin/sh -x
+#!/bin/sh 
 
 show_hostname='`hostname -s`'
 
-grep ceph /etc/hosts | awk '{ print $1 }' | xargs -i ssh {} "$* | sed s/^/$show_hostname:/"
+grep ceph /etc/hosts | awk '{ print $1 }' | xargs -i ssh {} "( $* 2>&1 ) | sed s/^/$show_hostname:/"
